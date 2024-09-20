@@ -1,0 +1,222 @@
+Sure! I'll create separate example sketches for each of the following:
+
+1. **Motor** class example: For dual motor control (forward, backward, left, right).
+2. **DigitalControl** class example: For controlling a device with simple on/off control.
+3. **SingleChannelControl** class example: For controlling a single motor with PWM and direction.
+
+I will also rename **SingleChannelMotorControl** to **SingleChannelControl** for clarity.
+
+---
+
+### **Updated AITINKR_AIOT_V2.h** (Header File)
+
+```cpp
+#ifndef AITINKR_AIOT_V2_H
+#define AITINKR_AIOT_V2_H
+
+#include "esp32-hal-ledc.h"
+#include "Arduino.h"
+
+// Define the GPIO pins for controlling the left and right motors
+#define LEFT_A 39   // Left motor, direction A
+#define LEFT_B 40   // Left motor, direction B
+#define RIGHT_A 41  // Right motor, direction A
+#define RIGHT_B 42  // Right motor, direction B
+
+// Enum to define LEFT and RIGHT channels
+enum Channel { LEFT, RIGHT };
+
+// Enum to define button states
+enum Button {
+    NO_BUTTON,        // No button is pressed
+    BOTTOM_BUTTON,    // Bottom button pressed
+    LEFT_BUTTON,      // Left button pressed
+    RIGHT_BUTTON,     // Right button pressed
+    MIDDLE_BUTTON,    // Middle button pressed
+    TOP_BUTTON        // Top button pressed
+};
+
+/**
+ * @brief Motor class: Provides methods to control two motors for mobility (forward, backward, left, right).
+ */
+class Motor {
+public:
+    void init();                  // Initialize the motor control pins
+    void setSpeed(int sp);        // Set motor speed
+    void setOffset(int of);       // Set motor offset for fine-tuning movement
+    void forward();               // Move both motors forward
+    void backward();              // Move both motors backward
+    void right();                 // Turn right
+    void left();                  // Turn left
+    void stop();                  // Stop both motors
+
+private:
+    int speed = 200;               // Default motor speed
+    int offset = 0;                // Offset value to adjust motor control
+};
+
+/**
+ * @brief DigitalControl class: Provides methods to control a device using simple on/off signals.
+ */
+class DigitalControl {
+public:
+    void init(Channel channel);    // Initialize the pins for digital control with enum channel selection (LEFT or RIGHT)
+    void on();                     // Turn the selected channel on (HIGH)
+    void off();                    // Turn the selected channel off (LOW)
+
+private:
+    int controlPin = -1;           // GPIO pin for the selected channel
+};
+
+/**
+ * @brief SingleChannelControl class: Provides methods to control a motor using PWM for speed and direction control.
+ */
+class SingleChannelControl {
+public:
+    void init(Channel channel);    // Initialize the motor control pins with enum channel selection (LEFT or RIGHT)
+    void setSpeed(int pwm);        // Set the speed of the motor using PWM
+    void forward();                // Set the motor direction to forward
+    void backward();               // Set the motor direction to backward
+    void stop();                   // Stop the motor
+
+private:
+    int motorPinA = -1;            // GPIO pin for the motor direction A (forward)
+    int motorPinB = -1;            // GPIO pin for the motor direction B (backward)
+    int pwmValue = 255;            // Default PWM value (max speed)
+};
+
+/**
+ * @brief OnBoardButtons class: Reads the button press state from a fixed analog pin (pin 5) and determines which button is pressed.
+ */
+class OnBoardButtons {
+public:
+    void init();                  // Initialize the button reading from pin 5
+    Button readButton();          // Read the button press and return the corresponding Button enum
+
+private:
+    const int analogPin = 5;      // Fixed analog pin (5) for reading button states
+    int buttonData;               // Variable to store the analog reading
+};
+
+#endif  // AITINKR_AIOT_V2_H
+```
+
+---
+
+### **Motor Example** (Dual Motor Control)
+
+```cpp
+#include "AITINKR_AIOT_V2.h"
+
+// Instantiate the Motor class
+Motor motorControl;
+
+void setup() {
+    // Initialize serial communication for debugging
+    Serial.begin(115200);
+    
+    // Initialize motor control for dual motors
+    motorControl.init();
+    motorControl.setSpeed(150);  // Set initial speed
+}
+
+void loop() {
+    // Move the motors forward for 2 seconds
+    motorControl.forward();
+    delay(2000);
+
+    // Turn left for 1 second
+    motorControl.left();
+    delay(1000);
+
+    // Turn right for 1 second
+    motorControl.right();
+    delay(1000);
+
+    // Move the motors backward for 2 seconds
+    motorControl.backward();
+    delay(2000);
+
+    // Stop the motors
+    motorControl.stop();
+    delay(2000);
+}
+```
+
+### **DigitalControl Example** (On/Off Control)
+
+```cpp
+#include "AITINKR_AIOT_V2.h"
+
+// Instantiate the DigitalControl class
+DigitalControl digitalControl;
+
+void setup() {
+    // Initialize serial communication for debugging
+    Serial.begin(115200);
+    
+    // Initialize digital control for the LEFT channel
+    digitalControl.init(LEFT);
+}
+
+void loop() {
+    // Turn on the device connected to the LEFT channel
+    Serial.println("Turning on the LEFT device.");
+    digitalControl.on();
+    delay(3000);
+
+    // Turn off the device connected to the LEFT channel
+    Serial.println("Turning off the LEFT device.");
+    digitalControl.off();
+    delay(3000);
+}
+```
+
+### **SingleChannelControl Example** (Single Motor Control with PWM)
+
+```cpp
+#include "AITINKR_AIOT_V2.h"
+
+// Instantiate the SingleChannelControl class
+SingleChannelControl singleMotorControl;
+
+void setup() {
+    // Initialize serial communication for debugging
+    Serial.begin(115200);
+    
+    // Initialize single-channel motor control for the RIGHT channel
+    singleMotorControl.init(RIGHT);
+    singleMotorControl.setSpeed(150);  // Set the motor speed
+}
+
+void loop() {
+    // Move the motor forward for 3 seconds
+    Serial.println("Moving RIGHT motor forward.");
+    singleMotorControl.forward();
+    delay(3000);
+
+    // Move the motor backward for 3 seconds
+    Serial.println("Moving RIGHT motor backward.");
+    singleMotorControl.backward();
+    delay(3000);
+
+    // Stop the motor for 3 seconds
+    Serial.println("Stopping RIGHT motor.");
+    singleMotorControl.stop();
+    delay(3000);
+}
+```
+
+---
+
+### **Key Changes**:
+
+1. **Renamed `SingleChannelMotorControl` to `SingleChannelControl`** to better reflect its purpose.
+2. Provided separate examples for:
+   - **Motor**: Dual motor control.
+   - **DigitalControl**: Simple on/off control.
+   - **SingleChannelControl**: Single motor control with PWM and direction.
+
+---
+
+Let me know if these examples work for your needs or if any further adjustments are required!

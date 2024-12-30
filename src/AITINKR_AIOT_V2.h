@@ -2,7 +2,11 @@
 #define AITINKR_AIOT_V2_H
 
 #include "Arduino.h"
+#include "AITINKRMQTT.h"
 #include "AIOTS3Servo.h"
+#include "AIOTCamera.h"
+#include <AITINKR_JSON_FIELDS.h>
+#include <Wire.h>
 
 // Define the GPIO pins for controlling the left and right motors
 #define LEFT_A 39   // Left motor, direction A
@@ -22,6 +26,23 @@ enum Button {
     MIDDLE_BUTTON,    // Middle button pressed
     TOP_BUTTON        // Top button pressed
 };
+
+// Default I2C pins for AITINKR AIOT V2
+#define AIOT_V2_SDA_PIN 21
+#define AIOT_V2_SCL_PIN 14
+
+/**
+ * @brief Initializes the I2C interface.
+ * @param sda SDA pin (default is AIOT_V2_SDA_PIN)
+ * @param scl SCL pin (default is AIOT_V2_SCL_PIN)
+ */
+void initI2C(uint8_t sda = AIOT_V2_SDA_PIN, uint8_t scl = AIOT_V2_SCL_PIN);
+
+/**
+ * @brief Scans for I2C devices and prints their addresses.
+ * @return True if devices are found, false otherwise.
+ */
+bool scanI2C();
 
 /**
  * @brief motor class: Provides methods to control two motors for mobility (forward, backward, left, right).

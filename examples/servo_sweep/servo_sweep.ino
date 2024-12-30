@@ -1,5 +1,5 @@
  
-#include <AITINKR_AIOT_V2.h> //Install 2.0.11 version of ESP32 board for servo examples
+#include <AITINKR_AIOT_V2.h>
 
 Servo myservo;  
 

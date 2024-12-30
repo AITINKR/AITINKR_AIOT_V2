@@ -1,5 +1,36 @@
 #include "AITINKR_AIOT_V2.h"
 
+void initI2C(uint8_t sda, uint8_t scl) {
+    Wire.begin(sda, scl);
+    Serial.print("I2C initialized. SDA: ");
+    Serial.print(sda);
+    Serial.print(", SCL: ");
+    Serial.println(scl);
+}
+
+bool scanI2C() {
+    Serial.println("Scanning for I2C devices...");
+    uint8_t deviceCount = 0;
+
+    for (uint8_t address = 1; address < 127; address++) {
+        Wire.beginTransmission(address);
+        if (Wire.endTransmission() == 0) {
+            Serial.print("I2C device found at address: 0x");
+            Serial.println(address, HEX);
+            deviceCount++;
+        }
+    }
+
+    if (deviceCount == 0) {
+        Serial.println("No I2C devices found.");
+        return false;
+    }
+
+    Serial.print("Total devices found: ");
+    Serial.println(deviceCount);
+    return true;
+}
+
 /**
  * @brief Initialize the motor GPIO pins and set default states.
  */

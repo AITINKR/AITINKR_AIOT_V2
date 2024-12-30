@@ -1,24 +1,34 @@
-#ifndef LIBRARIES_AIOTS3SERVO_SRC_AIOTS3PWM_H_
-#define LIBRARIES_AIOTS3SERVO_SRC_AIOTS3PWM_H_
+#ifndef LIBRARIES_AIOTS3Servo_SRC_AIOTS3PWM_H_
+#define LIBRARIES_AIOTS3Servo_SRC_AIOTS3PWM_H_
 #include "esp32-hal-ledc.h"
+#if defined(ARDUINO)
+	#include "Arduino.h"
+#endif
+
+#if defined(CONFIG_IDF_TARGET_ESP32C3)
+#define NUM_PWM 6
+#elif defined(CONFIG_IDF_TARGET_ESP32S2)   ||  defined(CONFIG_IDF_TARGET_ESP32S3)
+#define NUM_PWM 8
+#else 
 #define NUM_PWM 16
+#endif
+
 #define PWM_BASE_INDEX 0
 #define USABLE_ESP32_PWM (NUM_PWM-PWM_BASE_INDEX)
 #include <cstdint>
 
-#include "Arduino.h"
 class AIOTS3PWM {
 private:
 
 	void attach(int pin);
-	int pwmChannel = 0;                         // channel number for this servo
+	int pwmChannel = 0;                          
 	bool attachedState = false;
 	int pin;
 	uint8_t resolutionBits;
 	double myFreq;
 	int allocatenext(double freq);
 
-	static double _ledcSetupTimerFreq(uint8_t chan, double freq,
+	static double _ledcSetupTimerFreq(uint8_t pin, double freq,
 			uint8_t bit_num);
 
 	bool checkFrequencyForSideEffects(double freq);
@@ -34,13 +44,10 @@ private:
 	}
 
 	double setup(double freq, uint8_t resolution_bits=10);
-	//channel 0-15 resolution 1-16bits freq limits depend on resolution9
-	void attachPin(uint8_t pin);
-	// pin allocation
-	void deallocate();
+ 	void attachPin(uint8_t pin);
+ 	void deallocate();
 public:
-	// setup
-	AIOTS3PWM();
+ 	AIOTS3PWM();
 	virtual ~AIOTS3PWM();
 
 
@@ -50,28 +57,18 @@ public:
 		return attachedState;
 	}
 
-	// write raw duty cycle
-	void write(uint32_t duty);
-	// Write a duty cycle to the PWM using a unit vector from 0.0-1.0
-	void writeScaled(double duty);
-	//Adjust frequency
-	double writeTone(double freq);
+ 	void write(uint32_t duty);
+ 	void writeScaled(double duty);
+ 	double writeTone(double freq);
 	double writeNote(note_t note, uint8_t octave);
 	void adjustFrequency(double freq, double dutyScaled=-1);
 
-	// Read pwm data
-	uint32_t read();
+ 	uint32_t read();
 	double readFreq();
 	double getDutyScaled();
 
-	//Timer data
-	static int timerAndIndexToChannel(int timer, int index);
-	/**
-	 * allocateTimer
-	 * @param a timer number 0-3 indicating which timer to allocate in this library
-	 * Switch to explicate allocation mode
-	 *
-	 */
+ 	static int timerAndIndexToChannel(int timer, int index);
+ 
 	static void allocateTimer(int timerNumber);
 	static bool explicateAllocationMode;
 	int getTimer() {
@@ -80,19 +77,27 @@ public:
 	int timerNum = -1;
 	uint32_t myDuty = 0;
 	int getChannel();
-	static int PWMCount;              // the total number of attached pwm
+	static int PWMCount;               
 	static int timerCount[4];
-	static AIOTS3PWM * ChannelUsed[NUM_PWM]; // used to track whether a channel is in service
+	static AIOTS3PWM * ChannelUsed[NUM_PWM];  
 	static long timerFreqSet[4];
 
-	// Helper functions
-	int getPin() {
+ 	int getPin() {
 		return pin;
 	}
 	static bool hasPwm(int pin) {
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
+		if ((pin >=0 && pin <= 21) || 
+				(pin >= 35 && pin <= 45) || 
+				(pin == 46) ||(pin == 47) || (pin == 48)) 
 
+#else
+		if ((pin >=0 && pin <= 21) || 
+				(pin >= 35 && pin <= 45) || 
+				(pin == 46) ||(pin == 47) || (pin == 48)) 
+#endif
 			return true;
-		
+		return false;
 	}
 	static int channelsRemaining() {
 		return NUM_PWM - PWMCount;
@@ -104,4 +109,4 @@ public:
 
 AIOTS3PWM* pwmFactory(int pin);
 
-#endif /* LIBRARIES_AIOTS3SERVO_SRC_AIOTS3PWM_H_ */
+#endif /* LIBRARIES_AIOTS3Servo_SRC_AIOTS3PWM_H_ */

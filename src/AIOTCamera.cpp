@@ -1,3 +1,4 @@
+
 #include "AIOTCamera.h"
 
 // Fixed GPIO pin definitions for OV2640
@@ -37,12 +38,19 @@ bool AIOTCamera::begin() {
     if (debug) {
         Serial.println("Initializing camera...");
     }
-    return configureCamera();
+
+    if (!configureCamera()) {
+        Serial.println("[Error] Camera initialization failed!");
+        return false;
+    }
+
+    Serial.println("[Success] Camera initialized successfully.");
+    return true;
 }
 
 // Configure Camera Settings
 bool AIOTCamera::configureCamera() {
-    camera_config_t config;
+    camera_config_t config = {};
     config.ledc_channel = LEDC_CHANNEL_0;
     config.ledc_timer = LEDC_TIMER_0;
 
@@ -66,31 +74,38 @@ bool AIOTCamera::configureCamera() {
     config.pin_href = HREF_GPIO_NUM;
     config.pin_pclk = PCLK_GPIO_NUM;
 
-    config.xclk_freq_hz = 20000000;
-    config.pixel_format = PIXFORMAT_JPEG;
+    config.xclk_freq_hz = 20000000; // 20MHz clock
+    config.pixel_format = PIXFORMAT_JPEG; // Default to JPEG format
 
     // Dynamic resolution and frame buffer settings
     if (psramFound()) {
-        config.frame_size = FRAMESIZE_UXGA;
-        config.jpeg_quality = 10;
+        if (debug) {
+            Serial.println("PSRAM detected. Configuring for high resolution.");
+        }
+        config.frame_size = FRAMESIZE_UXGA; // 1600x1200
+        config.jpeg_quality = 10;          // High quality
     } else {
-        config.frame_size = FRAMESIZE_SVGA;
-        config.jpeg_quality = 15;
+        if (debug) {
+            Serial.println("PSRAM not detected. Configuring for medium resolution.");
+        }
+        config.frame_size = FRAMESIZE_SVGA; // 800x600
+        config.jpeg_quality = 15;          // Medium quality
     }
-    config.fb_count = framebufferCount;
+
+    config.fb_count = framebufferCount; // Number of frame buffers
 
     esp_err_t err = esp_camera_init(&config);
     if (err != ESP_OK) {
         if (debug) {
-            Serial.println("Camera initialization failed!");
+            Serial.printf("[Error] Camera initialization failed: %s\n", esp_err_to_name(err));
         }
         return false;
-    } else {
-        if (debug) {
-            Serial.println("Camera initialized successfully.");
-        }
-        return true;
     }
+
+    if (debug) {
+        Serial.println("[Info] Camera configured successfully.");
+    }
+    return true;
 }
 
 // Framebuffer Settings
@@ -283,11 +298,24 @@ bool AIOTCamera::setWhitePixelCorrection(bool enable) {
 
 // Capture and Release Frames
 camera_fb_t* AIOTCamera::capture() {
-    return esp_camera_fb_get();
+    camera_fb_t* frame = esp_camera_fb_get();
+    if (!frame) {
+        if (debug) {
+            Serial.println("[Error] Frame capture failed.");
+        }
+    } else {
+        if (debug) {
+            Serial.println("[Success] Frame captured.");
+        }
+    }
+    return frame;
 }
 
 void AIOTCamera::release(camera_fb_t* fb) {
     if (fb) {
         esp_camera_fb_return(fb);
+        if (debug) {
+            Serial.println("[Info] Frame buffer released.");
+        }
     }
 }

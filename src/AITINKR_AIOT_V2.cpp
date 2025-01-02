@@ -210,7 +210,6 @@ void SingleChannelControl::stop() {
 }
 
 // OnBoardButtons class methods
-
 /**
  * @brief Initialize the button reading from fixed analog pin 5.
  */
@@ -219,25 +218,69 @@ void OnBoardButtons::init() {
 }
 
 /**
+ * @brief Set the debounce time for button presses.
+ */
+void OnBoardButtons::setDebounceTime(unsigned long debounceTime) {
+    this->debounceTime = debounceTime;  // Set the debounce time in milliseconds
+}
+
+/**
+ * @brief Enable or disable filtering of repeated button presses.
+ * 
+ * @param enable If true, repeated presses of the same button are ignored.
+ */
+void OnBoardButtons::setIgnoreSameButton(bool enable) {
+    ignoreSameButton = enable;
+}
+
+/**
+ * @brief Check if filtering of repeated button presses is enabled.
+ * 
+ * @return bool True if filtering is enabled, false otherwise.
+ */
+bool OnBoardButtons::isIgnoreSameButtonEnabled() {
+    return ignoreSameButton;
+}
+
+/**
  * @brief Read the button press and return the corresponding Button enum.
  * 
  * @return Button The button state.
  */
 Button OnBoardButtons::readButton() {
-    buttonData = analogRead(analogPin);  // Read the analog input from pin 5
+    unsigned long currentMillis = millis();
 
-    // Determine the value of 'button' based on the value of 'buttonData'
+    // Read the analog input from pin 5
+    buttonData = analogRead(analogPin);
+
+    // Determine the button state
+    Button currentButtonState;
     if (buttonData > 4000) {
-        return NO_BUTTON;          // No button pressed
+        currentButtonState = NO_BUTTON;  // No button pressed
     } else if (buttonData > 2600) {
-        return LEFT_BUTTON;        // Left button pressed
+        currentButtonState = LEFT_BUTTON;  // Left button pressed
     } else if (buttonData > 2200) {
-        return MIDDLE_BUTTON ;       // Middle button pressed
+        currentButtonState = MIDDLE_BUTTON;  // Middle button pressed
     } else if (buttonData > 1660) {
-        return RIGHT_BUTTON;      // Right button pressed
+        currentButtonState = RIGHT_BUTTON;  // Right button pressed
     } else if (buttonData > 1200) {
-        return TOP_BUTTON;         // Top button pressed
+        currentButtonState = TOP_BUTTON;  // Top button pressed
     } else {
-        return BOTTOM_BUTTON;      // Bottom button pressed
+        currentButtonState = BOTTOM_BUTTON;  // Bottom button pressed
     }
+
+    // Check for debounce logic and if the button state has changed
+    if (currentMillis - lastDebounceTime > debounceTime) {
+        lastDebounceTime = currentMillis;  // Update debounce time
+
+        if (ignoreSameButton && currentButtonState == lastButtonState) {
+            return NO_BUTTON;  // Ignore repeated button presses if enabled
+        }
+
+        lastButtonState = currentButtonState;  // Update last button state
+        return currentButtonState;  // Return the new button state
+    }
+
+    // If no change in button state, return NO_BUTTON
+    return NO_BUTTON;
 }

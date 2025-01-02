@@ -100,13 +100,20 @@ private:
  * @brief OnBoardButtons class: Reads the button press state from a fixed analog pin (pin 5) and determines which button is pressed.
  */
 class OnBoardButtons {
-public:
-    void init();                  // Initialize the button reading from pin 5
-    Button readButton();          // Read the button press and return the corresponding Button enum
-
 private:
-    const int analogPin = 5;      // Fixed analog pin (5) for reading button states
-    int buttonData;               // Variable to store the analog reading
+    unsigned long debounceTime = 200;        // Default debounce time in milliseconds
+    unsigned long lastDebounceTime = 0;     // Tracks the last debounce time
+    Button lastButtonState = NO_BUTTON;     // Tracks the last button state
+    int analogPin = 5;                      // Default analog pin for buttons
+    int buttonData = 0;                     // Stores the analog read data
+    bool ignoreSameButton = false;          // Flag to ignore repeated presses of the same button
+
+public:
+    void init();
+    void setDebounceTime(unsigned long debounceTime);
+    void setIgnoreSameButton(bool enable);
+    bool isIgnoreSameButtonEnabled();
+    Button readButton();
 };
 
 #endif  // AITINKR_AIOT_V2_H

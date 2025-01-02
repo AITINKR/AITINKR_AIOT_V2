@@ -49,42 +49,37 @@
 */
 
 
+
 AIOTCamera camera;
 
 void setup() {
     Serial.begin(115200);
 
-    if (camera.begin()) {
-        Serial.println("AIOTCamera ready!");
+    camera.setDebug(true); // Enable debug logs
 
-        // Configure image settings
-        camera.setBrightness(2);                // Increase brightness
-        camera.setContrast(1);                  // Adjust contrast
-        camera.setSaturation(2);                // Increase saturation
-        camera.setSpecialEffect(1);             // Apply negative effect
-        camera.setFlip(true);                   // Enable vertical flip
-        camera.setMirror(true);                 // Enable horizontal mirror
-        camera.setQuality(10);                  // Set high-quality JPEG
-        camera.setFrameSize(FRAMESIZE_VGA);     // Set resolution to VGA
-        camera.setPixelFormat(PIXFORMAT_GRAYSCALE); // Set grayscale format
-
-        // Configure advanced settings
-        camera.setWhiteBalanceMode(1);          // Set white balance to daylight
-        camera.setAwbGain(true);                // Enable AWB gain
-        camera.setExposureControl(true);        // Enable auto exposure
-        camera.setExposureLevel(2);             // Adjust exposure level
-    } else {
-        Serial.println("Failed to initialize AIOTCamera.");
+    if (!camera.begin()) {
+        Serial.println("Camera initialization failed. Check connections and configurations.");
+        while (true); // Halt the program
     }
+
+    // Minimal settings for testing
+    if (!camera.setFrameSize(FRAMESIZE_QVGA)) {
+        Serial.println("Failed to set frame size. Please ensure compatibility.");
+    }
+    if (!camera.setPixelFormat(PIXFORMAT_JPEG)) {
+        Serial.println("Failed to set pixel format. Please ensure compatibility.");
+    }
+
+    Serial.println("Camera initialized and configured.");
 }
 
 void loop() {
-    camera_fb_t* fb = camera.capture();
-    if (fb) {
-        Serial.printf("Captured %d bytes\n", fb->len);
-        camera.release(fb);
+    camera_fb_t* frame = camera.capture();
+    if (frame) {
+        Serial.printf("Frame captured successfully. Size: %d bytes\n", frame->len);
+        camera.release(frame);
     } else {
-        Serial.println("Capture failed.");
+        Serial.println("Frame capture failed. Try again.");
     }
-    delay(1000);
+    delay(1000); // Capture every second
 }

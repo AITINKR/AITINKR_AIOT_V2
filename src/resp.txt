@@ -1,1 +1,0 @@
-# AITinkr AIoT v2 Library for Arduino
